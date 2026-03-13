@@ -1,0 +1,65 @@
+// frontend/src/components/layout/AdminLayout.jsx
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+
+const AdminLayout = ({ children }) => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  return (
+    <div className="admin-layout">
+      <header className="admin-header">
+        <div className="logo">
+          <h1>EduLearn Admin</h1>
+        </div>
+        
+        <div className="user-info">
+          <span>{user?.firstName} {user?.lastName}</span>
+          <button onClick={handleLogout} className="logout-btn">
+            Logout
+          </button>
+        </div>
+      </header>
+
+      <div className="admin-container">
+        <nav className="admin-sidebar">
+          <ul>
+            <li>
+              <a href="/admin/dashboard">Dashboard</a>
+            </li>
+            <li>
+              <a href="/admin/users">User Management</a>
+            </li>
+            <li>
+              <a href="/admin/courses">Course Management</a>
+            </li>
+            <li>
+              <a href="/admin/assignments">Assignments</a>
+            </li>
+            <li>
+              <a href="/admin/announcements">Announcements</a>
+            </li>
+            <li>
+              <a href="/admin/reports">Reports</a>
+            </li>
+            <li>
+              <a href="/admin/settings">Settings</a>
+            </li>
+          </ul>
+        </nav>
+
+        <main className="admin-content">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export { AdminLayout };

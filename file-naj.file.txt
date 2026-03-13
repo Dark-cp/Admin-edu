@@ -1,0 +1,235 @@
+// frontend/src/components/admin/Dashboard.jsx
+import React, { useState, useEffect } from 'react';
+import { Line, Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+import { adminService } from '../../services/adminService';
+import { AdminLayout } from '../layout/AdminLayout';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+const Dashboard = () => {
+  const [stats, setStats] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState('week');
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [timeRange]);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const response = await adminService.getDashboardStats();
+      setStats(response.data);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Chart configurations
+  const userActivityChartData = {
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [
+      {
+        label: 'Student Activity',
+        data: [12, 19, 3, 5, 2, 3, 9],
+        borderColor: 'rgb(75, 192, 192)',
+        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+      },
+      {
+        label: 'Staff Activity',
+        data: [2, 3, 20, 5, 1, 4, 2],
+        borderColor: 'rgb(255, 99, 132)',
+        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+      }
+    ]
+  };
+
+  const courseDistributionData = {
+    labels: ['Science', 'Mathematics', 'Literature', 'History', 'Computer Science'],
+    datasets: [
+      {
+        label: 'Courses by Department',
+        data: [12, 19, 3, 5, 2],
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.5)',
+          'rgba(54, 162, 235, 0.5)',
+          'rgba(255, 205, 86, 0.5)',
+          'rgba(75, 192, 192, 0.5)',
+          'rgba(153, 102, 255, 0.5)',
+        ],
+        borderColor: [
+          'rgb(255, 99, 132)',
+          'rgb(54, 162, 235)',
+          'rgb(255, 205, 86)',
+          'rgb(75, 192, 192)',
+          'rgb(153, 102, 255)',
+        ],
+        borderWidth: 1,
+      }
+    ]
+  };
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Loading dashboard data...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  return (
+    <AdminLayout>
+      <div className="dashboard">
+        <div className="dashboard-header">
+          <h1>Admin Dashboard</h1>
+          <div className="time-filter">
+            <select 
+              value={timeRange} 
+              onChange={(e) => setTimeRange(e.target.value)}
+            >
+              <option value="day">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="year">This Year</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-icon students">
+              <i className="fas fa-user-graduate"></i>
+            </div>
+            <div className="stat-details">
+              <h2>{stats.totalStudents || 0}</h2>
+              <p>Total Students</p>
+              <span className="stat-change positive">
+                +12% from last month
+              </span>
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon staff">
+              <i className="fas fa-chalkboard-teacher"></i>
+            </div>
+            <div className="stat-details">
+              <h2>{stats.totalStaff || 0}</h2>
+              <p>Total Staff</p>
+              <span className="stat-change positive">
+                +5% from last month
+              </span>
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon courses">
+              <i className="fas fa-book"></i>
+            </div>
+            <div className="stat-details">
+              <h2>{stats.totalCourses || 0}</h2>
+              <p>Active Courses</p>
+              <span className="stat-change negative">
+                -2% from last month
+              </span>
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon activity">
+              <i className="fas fa-chart-line"></i>
+            </div>
+            <div className="stat-details">
+              <h2>{stats.systemActivity || 0}</h2>
+              <p>Daily Activities</p>
+              <span className="stat-change positive">
+                +8% from yesterday
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="charts-grid">
+          <div className="chart-container">
+            <h3>User Activity</h3>
+            <Line data={userActivityChartData} />
+          </div>
+          
+          <div className="chart-container">
+            <h3>Course Distribution</h3>
+            <Bar data={courseDistributionData} />
+          </div>
+        </div>
+
+        <div className="system-health">
+          <h3>System Health</h3>
+          <div className="health-metrics">
+            <div className="metric">
+              <span className="metric-name">CPU Usage</span>
+              <div className="progress-bar">
+                <div 
+                  className="progress-fill" 
+                  style={{ width: `${stats.systemHealth?.cpuUsage || 0}%` }}
+                ></div>
+              </div>
+              <span className="metric-value">
+                {Math.round(stats.systemHealth?.cpuUsage || 0)}%
+              </span>
+            </div>
+            
+            <div className="metric">
+              <span className="metric-name">Memory Usage</span>
+              <div className="progress-bar">
+                <div 
+                  className="progress-fill" 
+                  style={{ width: `${stats.systemHealth?.memoryUsage || 0}%` }}
+                ></div>
+              </div>
+              <span className="metric-value">
+                {Math.round(stats.systemHealth?.memoryUsage || 0)}%
+              </span>
+            </div>
+            
+            <div className="metric">
+              <span className="metric-name">Disk Usage</span>
+              <div className="progress-bar">
+                <div 
+                  className="progress-fill" 
+                  style={{ width: `${stats.systemHealth?.diskUsage || 0}%` }}
+                ></div>
+              </div>
+              <span className="metric-value">
+                {Math.round(stats.systemHealth?.diskUsage || 0)}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </AdminLayout>
+  );
+};
+
+export default Dashboard;

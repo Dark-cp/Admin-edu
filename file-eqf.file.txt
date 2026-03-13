@@ -1,0 +1,114 @@
+// frontend/src/components/staff/Dashboard.jsx
+import React, { useState, useEffect } from 'react';
+import { StaffLayout } from '../layout/StaffLayout';
+import { staffService } from '../../services/staffService';
+
+const Dashboard = () => {
+  const [dashboardData, setDashboardData] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const response = await staffService.getDashboard();
+      setDashboardData(response.data);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <StaffLayout>
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Loading your dashboard...</p>
+        </div>
+      </StaffLayout>
+    );
+  }
+
+  return (
+    <StaffLayout>
+      <div className="staff-dashboard">
+        <h1>Staff Dashboard</h1>
+        
+        <div className="welcome-banner">
+          <h2>Welcome, {dashboardData.staff?.firstName}!</h2>
+          <p>You have {dashboardData.pendingGrading?.length || 0} items to grade</p>
+        </div>
+
+        <div className="dashboard-grid">
+          <div className="assigned-courses">
+            <h3>Assigned Courses</h3>
+            <div className="courses-list">
+              {dashboardData.assignedCourses?.map(course => (
+                <div key={course._id} className="course-card">
+                  <h4>{course.name}</h4>
+                  <p className="course-code">{course.code}</p>
+                  <p className="student-count">
+                    {course.students?.length || 0} students
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="pending-grading">
+            <h3>Pending Grading</h3>
+            <div className="grading-list">
+              {dashboardData.pendingGrading?.map(item => (
+                <div key={item._id} className="grading-card">
+                  <h4>{item.assignment?.title}</h4>
+                  <p className="course-name">{item.course?.name}</p>
+                  <p className="submission-count">
+                    {item.submissions?.filter(s => s.status === 'submitted').length} submissions
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="recent-submissions">
+            <h3>Recent Submissions</h3>
+            <div className="submissions-list">
+              {dashboardData.recentSubmissions?.map(submission => (
+                <div key={submission._id} className="submission-card">
+                  <h4>{submission.assignment?.title}</h4>
+                  <p className="student-name">{submission.student?.firstName} {submission.student?.lastName}</p>
+                  <p className="submission-date">
+                    Submitted: {new Date(submission.submittedAt).toLocaleDateString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="upcoming-classes">
+            <h3>Upcoming Classes</h3>
+            <div className="classes-list">
+              {dashboardData.upcomingClasses?.map(cls => (
+                <div key={cls._id} className="class-card">
+                  <h4>{cls.course?.name}</h4>
+                  <p className="class-time">
+                    {new Date(cls.schedule.startTime).toLocaleTimeString()} - 
+                    {new Date(cls.schedule.endTime).toLocaleTimeString()}
+                  </p>
+                  <p className="class-location">{cls.schedule.location}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </StaffLayout>
+  );
+};
+
+export default Dashboard;

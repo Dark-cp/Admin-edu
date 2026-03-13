@@ -1,0 +1,124 @@
+// frontend/src/components/student/Dashboard.jsx
+import React, { useState, useEffect } from 'react';
+import { StudentLayout } from '../layout/StudentLayout';
+import { studentService } from '../../services/studentService';
+
+const Dashboard = () => {
+  const [dashboardData, setDashboardData] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const response = await studentService.getDashboard();
+      setDashboardData(response.data);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <StudentLayout>
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Loading your dashboard...</p>
+        </div>
+      </StudentLayout>
+    );
+  }
+
+  return (
+    <StudentLayout>
+      <div className="student-dashboard">
+        <h1>Student Dashboard</h1>
+        
+        <div className="welcome-banner">
+          <h2>Welcome back, {dashboardData.student?.firstName}!</h2>
+          <p>You have {dashboardData.upcomingAssignments?.length || 0} upcoming assignments</p>
+        </div>
+
+        <div className="dashboard-grid">
+          <div className="enrolled-courses">
+            <h3>Enrolled Courses</h3>
+            <div className="courses-list">
+              {dashboardData.enrolledCourses?.map(course => (
+                <div key={course._id} className="course-card">
+                  <h4>{course.name}</h4>
+                  <p className="course-code">{course.code}</p>
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill" 
+                      style={{ width: `${course.progress || 0}%` }}
+                    ></div>
+                  </div>
+                  <span className="progress-text">
+                    {course.progress || 0}% complete
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="upcoming-assignments">
+            <h3>Upcoming Assignments</h3>
+            <div className="assignments-list">
+              {dashboardData.upcomingAssignments?.map(assignment => (
+                <div key={assignment._id} className="assignment-card">
+                  <h4>{assignment.title}</h4>
+                  <p className="course-name">{assignment.course?.name}</p>
+                  <p className="due-date">
+                    Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                  </p>
+                  <span className={`status-badge ${assignment.status}`}>
+                    {assignment.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="recent-announcements">
+            <h3>Recent Announcements</h3>
+            <div className="announcements-list">
+              {dashboardData.recentAnnouncements?.map(announcement => (
+                <div key={announcement._id} className="announcement-card">
+                  <h4>{announcement.title}</h4>
+                  <p className="announcement-preview">
+                    {announcement.content.substring(0, 100)}...
+                  </p>
+                  <p className="announcement-date">
+                    {new Date(announcement.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grades-summary">
+            <h3>Recent Grades</h3>
+            <div className="grades-list">
+              {dashboardData.recentGrades?.map(grade => (
+                <div key={grade._id} className="grade-card">
+                  <h4>{grade.assignment?.title}</h4>
+                  <p className="course-name">{grade.course?.name}</p>
+                  <p className="grade-value">
+                    {grade.score}/{grade.maxPoints}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </StudentLayout>
+  );
+};
+
+export default Dashboard;

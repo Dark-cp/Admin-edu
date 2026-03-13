@@ -1,0 +1,10 @@
+graph TD
+    A[Client] --> B[Load Balancer]
+    B --> C[Frontend Servers]
+    B --> D[Backend Servers]
+    D --> E[Database]
+    D --> F[File Storage]
+    D --> G[Cache/Redis]
+    H[Admin Portal] --> D
+    I[Student Portal] --> D
+    J[Staff Portal] --> D
